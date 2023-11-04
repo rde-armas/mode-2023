@@ -7,7 +7,7 @@ from skimage.color import rgb2gray
 
 IMG_PATH = './imagenes/'
 
-def load_img(path = IMG_PATH):
+def load_img(path):
     img_background = []
     for i in range(16):
         with open(f'{path}{i}.jpg', 'rb') as background:
@@ -39,11 +39,11 @@ def positive_patches():
     faces_img = faces.images
     return faces_img
 
-def negative_patches():
+def negative_patches(path = IMG_PATH):
     def to_grayscale(img):
         return rgb2gray(img)
     shape = positive_patches()[1].shape
-    img_backgroud = load_img()
+    img_backgroud = load_img(path)
     background_grayscale = list(map(to_grayscale, img_backgroud))
     patches = [extract_patches(back, shape) for back in background_grayscale]
     background_shapes = np.reshape(patches, (16 * 820, 62, 47))

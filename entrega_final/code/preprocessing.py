@@ -28,13 +28,23 @@ class HOGPrepocess(Preprocess):
         return super().preprocess_imgs(images)
     
 class HAARPreprocess(Preprocess):
-
     def __init__(self) -> None:
         super().__init__()
     
     def preprocess_img(self, img: np.ndarray):
 
-        return None
+        return img
 
     def preprocess_imgs(self, images: np.ndarray):
         return super().preprocess_imgs(images)
+    
+class AllPreprocess(Preprocess):
+    
+        def __init__(self) -> None:
+            super().__init__()
+        
+        def preprocess_img(self, img: np.ndarray):
+            return img
+    
+        def preprocess_imgs(self, images: np.ndarray):
+            return super().preprocess_imgs(images)
