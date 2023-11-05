@@ -3,22 +3,24 @@ import preprocessing as pre
 import carga as carga
 import numpy as np
 from sklearn.model_selection import train_test_split
-#from sklearn.metrics import confusion_matrix, precision_score, recall_score, roc_curve
+from sklearn.metrics import classification_report
+
 import time
-#from tqdm.auto import tqdm
 import joblib
+from tabulate import tabulate
 
 
 def test_classifier(classifier: clf.Classifier, X_train, X_test, y_train, y_test):
     
     train_st = time.time()
+    time_id = int(time.time())
     classifier.train(X_train, y_train)
-    joblib.dump(classifier, f'./model/{classifier.__class__.__name__}.pkl')
+    joblib.dump(classifier, f'./model/{classifier.__class__.__name__}{time_id}.pkl')
     train_et = time.time()
+    y_pred = classifier.classify(X_test)
+    report_test = classification_report(y_test, y_pred, output_dict=True)
 
-    Y_pred = classifier.classify(X_test)
-
-    return y_test, Y_pred, train_et - train_st
+    return y_test, y_pred, report_test, train_et - train_st
 
 if __name__ == "__main__":
     positive_faces = carga.positive_patches()
@@ -35,7 +37,7 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(samples, labels, test_size=0.20, random_state=42)
 
 
-    preprocessing_methods = [pre.HOGPrepocess(), pre.HAARPreprocess(), ]
+    preprocessing_methods = [pre.reshape(), pre.HOGPrepocess()]#, pre.HAARPreprocess()]
     #podemos pasar parametros si es necesario
 
     knn_classifier = clf.KNNClassifier()
@@ -44,9 +46,26 @@ if __name__ == "__main__":
     rf_classifier = clf.RFClassifier()
     boosting_classifier = clf.BoostingClassifier()
 
-    classifiers = [knn_classifier, dtree_classifier, logistic_regression_classifier, rf_classifier, boosting_classifier]
+    classifiers = [knn_classifier,  logistic_regression_classifier]#,dtree_classifier, rf_classifier, boosting_classifier]
+    #print('Classifier  Accuracy Precision Recall F1-Score Time Train')
+    results = []
+    for cls in classifiers:
+        for prep in preprocessing_methods:
+            X_train_prep = prep.preprocess_imgs(X_train)
+            X_test_prep = prep.preprocess_imgs(X_test)
+            y_test, y_pred, report_test, ti = test_classifier(cls, X_train_prep, X_test_prep, y_train, y_test)
+            #print(f"Testing {cls.__class__.__name__} con {prep.__class__.__name__} {report_test['accuracy']} {report_test['macro avg']['precision']} {report_test['macro avg']['recall']} {report_test['macro avg']['f1-score']} {ti}")
+            results.append([
+                cls.__class__.__name__,
+                prep.__class__.__name__,
+                report_test['accuracy'],
+                report_test['macro avg']['precision'],
+                report_test['macro avg']['recall'],
+                report_test['macro avg']['f1-score'],
+                ti
+            ])  
+            #print(f"Precision: {report_test}")
+    headers = ["Classifier", "Preprocessing", "Accuracy", "Precision", "Recall", "F1-Score", "Time Train"]
+    print(tabulate(results, headers, tablefmt="grid"))
 
-    X_train_reshape = np.reshape(X_train,(21082, 2914))
-    X_test_resahape = np.reshape(X_test, (5271, 2914))
-    results_logistic_regression = test_classifier(logistic_regression_classifier, X_train_reshape, X_test_resahape, y_train, y_test ) 
   
