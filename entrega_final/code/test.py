@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, balanced_accuracy_score, roc_curve, auc
 
 import time
+from tqdm import tqdm
 import joblib
 from tabulate import tabulate
 
@@ -35,13 +36,13 @@ if __name__ == "__main__":
     labels = np.concatenate((positive_labels, negative_labels))
     X_train, X_test, y_train, y_test = train_test_split(samples, labels, test_size=0.20, random_state=42)
 
-    X_train = X_train[10:100]
-    y_train = y_train[10:100]
+    # X_train = X_train[10:100]
+    # y_train = y_train[10:100]
 
-    X_test = X_test[10:30]
-    y_test = y_test[10:30]
+    # X_test = X_test[10:30]
+    # y_test = y_test[10:30]
 
-    features_methods = [feat.reshape() , feat.HOGPrepocess() ,  feat.HAARPreprocess()]
+    features_methods = [feat.reshape() , feat.HOGPrepocess(), feat.HAARPreprocess()]
     #podemos pasar parametros si es necesario
 
     knn_classifier = clf.KNNClassifier()
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     rf_classifier = clf.RFClassifier()
     boosting_classifier = clf.BoostingClassifier()
 
-    classifiers = [knn_classifier,  logistic_regression_classifier]#,dtree_classifier, rf_classifier, boosting_classifier]
+    classifiers = [knn_classifier, logistic_regression_classifier,dtree_classifier, rf_classifier, boosting_classifier]
 
     results = []
     for fea in features_methods:

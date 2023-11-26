@@ -62,7 +62,7 @@ class DTreeClassifier(Classifier):
         return self.classifier.predict(images)
     
     def train(self, X_train, Y_train):
-        super().fit(X_train, Y_train)
+        self.classifier.fit(X_train, Y_train)
     
 class BoostingClassifier(Classifier):
     def __init__(self, parameters="") -> None:
@@ -73,4 +73,4 @@ class BoostingClassifier(Classifier):
         return self.classifier.predict(images)
     
     def train(self, X_train, Y_train):
-        self.fit(X_train, Y_train)
+        self.classifier.fit(X_train, Y_train)
