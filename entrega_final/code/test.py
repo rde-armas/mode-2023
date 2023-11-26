@@ -3,7 +3,7 @@ import preprocessing as pre
 import carga as carga
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix, balanced_accuracy_score, roc_curve, auc
 
 import time
 import joblib
@@ -47,25 +47,32 @@ if __name__ == "__main__":
     boosting_classifier = clf.BoostingClassifier()
 
     classifiers = [knn_classifier,  logistic_regression_classifier]#,dtree_classifier, rf_classifier, boosting_classifier]
-    #print('Classifier  Accuracy Precision Recall F1-Score Time Train')
+
     results = []
     for cls in classifiers:
         for prep in preprocessing_methods:
             X_train_prep = prep.preprocess_imgs(X_train)
             X_test_prep = prep.preprocess_imgs(X_test)
             y_test, y_pred, report_test, ti = test_classifier(cls, X_train_prep, X_test_prep, y_train, y_test)
+            conf_matrix = confusion_matrix(y_test, y_pred)
+            fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+            roc_auc = auc(fpr, tpr)
+            tp, fp, fn, tn = conf_matrix.ravel()
             #print(f"Testing {cls.__class__.__name__} con {prep.__class__.__name__} {report_test['accuracy']} {report_test['macro avg']['precision']} {report_test['macro avg']['recall']} {report_test['macro avg']['f1-score']} {ti}")
             results.append([
                 cls.__class__.__name__,
                 prep.__class__.__name__,
                 report_test['accuracy'],
-                report_test['macro avg']['precision'],
-                report_test['macro avg']['recall'],
-                report_test['macro avg']['f1-score'],
+                report_test['1']['precision'],
+                tp / (tp + fn),
+                fp / (tn + fp),
+                roc_auc,
+                balanced_accuracy_score(y_test,y_pred),
+                report_test['1']['f1-score'],
                 ti
             ])  
             #print(f"Precision: {report_test}")
-    headers = ["Classifier", "Preprocessing", "Accuracy", "Precision", "Recall", "F1-Score", "Time Train"]
+    headers = ["Classifier", "Preprocessing", "Accuracy", "Precision", "Recall/TPR", "FPR", "F1-Score", "ROC curve (area)", "Balanced Accuracy", "Time Train"]
     print(tabulate(results, headers, tablefmt="grid"))
 
   
