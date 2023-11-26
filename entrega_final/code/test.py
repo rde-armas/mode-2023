@@ -1,5 +1,5 @@
 import clasifiers as clf
-import preprocessing as pre
+import features as feat
 import carga as carga
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -11,7 +11,6 @@ from tabulate import tabulate
 
 
 def test_classifier(classifier: clf.Classifier, X_train, X_test, y_train, y_test):
-    
     train_st = time.time()
     time_id = int(time.time())
     classifier.train(X_train, y_train)
@@ -36,8 +35,13 @@ if __name__ == "__main__":
     labels = np.concatenate((positive_labels, negative_labels))
     X_train, X_test, y_train, y_test = train_test_split(samples, labels, test_size=0.20, random_state=42)
 
+    X_train = X_train[10:100]
+    y_train = y_train[10:100]
 
-    preprocessing_methods = [pre.reshape(), pre.HOGPrepocess()]#, pre.HAARPreprocess()]
+    X_test = X_test[10:30]
+    y_test = y_test[10:30]
+
+    features_methods = [feat.reshape() , feat.HOGPrepocess() ,  feat.HAARPreprocess()]
     #podemos pasar parametros si es necesario
 
     knn_classifier = clf.KNNClassifier()
@@ -49,10 +53,10 @@ if __name__ == "__main__":
     classifiers = [knn_classifier,  logistic_regression_classifier]#,dtree_classifier, rf_classifier, boosting_classifier]
 
     results = []
-    for cls in classifiers:
-        for prep in preprocessing_methods:
-            X_train_prep = prep.preprocess_imgs(X_train)
-            X_test_prep = prep.preprocess_imgs(X_test)
+    for fea in features_methods:
+        X_train_prep = fea.preprocess_imgs(X_train)
+        X_test_prep = fea.preprocess_imgs(X_test)
+        for cls in classifiers:
             y_test, y_pred, report_test, ti = test_classifier(cls, X_train_prep, X_test_prep, y_train, y_test)
             conf_matrix = confusion_matrix(y_test, y_pred)
             fpr, tpr, thresholds = roc_curve(y_test, y_pred)
@@ -61,7 +65,7 @@ if __name__ == "__main__":
             #print(f"Testing {cls.__class__.__name__} con {prep.__class__.__name__} {report_test['accuracy']} {report_test['macro avg']['precision']} {report_test['macro avg']['recall']} {report_test['macro avg']['f1-score']} {ti}")
             results.append([
                 cls.__class__.__name__,
-                prep.__class__.__name__,
+                fea.__class__.__name__,
                 report_test['accuracy'],
                 report_test['1']['precision'],
                 tp / (tp + fn),
