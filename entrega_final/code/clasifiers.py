@@ -4,8 +4,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import GradientBoostingClassifier
-
 
 class Classifier(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -64,13 +62,3 @@ class DTreeClassifier(Classifier):
     def train(self, X_train, Y_train):
         self.classifier.fit(X_train, Y_train)
     
-class BoostingClassifier(Classifier):
-    def __init__(self, parameters="") -> None:
-        super().__init__(parameters)
-        self.classifier = GradientBoostingClassifier()
-    
-    def classify(self, images: list[np.ndarray]) -> list[int]:
-        return self.classifier.predict(images)
-    
-    def train(self, X_train, Y_train):
-        self.classifier.fit(X_train, Y_train)

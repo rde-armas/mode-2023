@@ -3,7 +3,7 @@ import numpy as np
 from skimage import feature
 from skimage.transform import integral_image
 
-
+from concurrent.futures import ProcessPoolExecutor
 from tqdm import tqdm
 
 class Features(metaclass=abc.ABCMeta):
@@ -13,14 +13,13 @@ class Features(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def preprocess_imgs(self, images: np.ndarray, pro):
+    def preprocess_imgs(self, images: np.ndarray):
         res = []
-        
-        for img in tqdm(images, desc='Preprocessing Images ' + pro.__class__.__name__ , unit="image"):
-            res.append(self.preprocess_img(img))
+        with ProcessPoolExecutor() as executor:
+            res = list(tqdm(executor.map(self.preprocess_img, images), total=len(images), desc='Preprocessing Images ' + self.__class__.__name__, unit="image"))
         return res
 
-class reshape(Features):  
+class Reshape(Features):  
     def __init__(self) -> None:
         super().__init__()
     
@@ -40,7 +39,7 @@ class HOGPrepocess(Features):
         return feature.hog(img)
         
     def preprocess_imgs(self, images: np.ndarray):
-        return super().preprocess_imgs(images, self)
+        return super().preprocess_imgs(images)
     
 class HAARPreprocess(Features):
     def __init__(self) -> None:
@@ -54,8 +53,8 @@ class HAARPreprocess(Features):
                              feature_coord=feature_coord)
     
     def preprocess_img(self, img: np.ndarray):
-        feature_types = ['type-2-x']#, 'type-2-y','type-3-x', 'type-3-y', 'type-4']
+        feature_types = ['type-2-x', 'type-2-y']#,'type-3-x', 'type-3-y', 'type-4']
         return self.extract_feature_image(img, feature_types)
 
     def preprocess_imgs(self, images: np.ndarray):
-        return super().preprocess_imgs(images, self)
+        return super().preprocess_imgs(images)

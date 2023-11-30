@@ -11,11 +11,10 @@ import joblib
 from tabulate import tabulate
 
 
-def test_classifier(classifier: clf.Classifier, X_train, X_test, y_train, y_test):
+def test_classifier(classifier: clf.Classifier, fea: feat.Features, X_train, X_test, y_train, y_test):
     train_st = time.time()
-    time_id = int(time.time())
     classifier.train(X_train, y_train)
-    joblib.dump(classifier, f'./model/{classifier.__class__.__name__}{time_id}.pkl')
+    joblib.dump(classifier, f'./model/{classifier.__class__.__name__}{fea.__class__.__name__}.pkl')
     train_et = time.time()
     y_pred = classifier.classify(X_test)
     report_test = classification_report(y_test, y_pred, output_dict=True)
@@ -42,23 +41,22 @@ if __name__ == "__main__":
     # X_test = X_test[10:30]
     # y_test = y_test[10:30]
 
-    features_methods = [feat.reshape() , feat.HOGPrepocess(), feat.HAARPreprocess()]
+    features_methods = [ feat.HOGPrepocess(), feat.HAARPreprocess()]
     #podemos pasar parametros si es necesario
 
     knn_classifier = clf.KNNClassifier()
     dtree_classifier = clf.DTreeClassifier()
     logistic_regression_classifier = clf.LogisticRegressionClassifier()
     rf_classifier = clf.RFClassifier()
-    boosting_classifier = clf.BoostingClassifier()
 
-    classifiers = [knn_classifier, logistic_regression_classifier,dtree_classifier, rf_classifier, boosting_classifier]
+    classifiers = [knn_classifier, logistic_regression_classifier,dtree_classifier, rf_classifier]
 
     results = []
     for fea in features_methods:
         X_train_prep = fea.preprocess_imgs(X_train)
         X_test_prep = fea.preprocess_imgs(X_test)
         for cls in classifiers:
-            y_test, y_pred, report_test, ti = test_classifier(cls, X_train_prep, X_test_prep, y_train, y_test)
+            y_test, y_pred, report_test, ti = test_classifier(cls, fea, X_train_prep, X_test_prep, y_train, y_test)
             conf_matrix = confusion_matrix(y_test, y_pred)
             fpr, tpr, thresholds = roc_curve(y_test, y_pred)
             roc_auc = auc(fpr, tpr)
