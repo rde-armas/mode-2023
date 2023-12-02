@@ -12,6 +12,7 @@ import time
 from tqdm import tqdm
 import joblib
 from tabulate import tabulate
+from concurrent.futures import ProcessPoolExecutor
 
 def test_classifier(classifier: clf.Classifier, fea: feat.Features, X_train, X_test, y_train, y_test):
      # va a faltar agregar el nombre de los parametros de los modelos
@@ -28,28 +29,29 @@ def test_classifier(classifier: clf.Classifier, fea: feat.Features, X_train, X_t
 
 
 # Guarda las imagenes despues de sacar las features 
-def save_imgs_matrix(X: np.array, feature, des: str, batch_size: int = 100):
+def save_imgs_matrix(X: np.array, feature, des: str, batch_size: int = 1000):
     filename = f'./data/{feature.__class__.__name__}_{des}.npz'
     matrices = {}
 
-    for i in tqdm(range(0, X.shape[0], batch_size), desc='Guardando matrices en lotes'):
-        batch_indices = range(i, min(i + batch_size, X.shape[0]))
-        batch_matrices = {str(idx): feature.preprocess_img(X[idx]) for idx in batch_indices}
+    with ProcessPoolExecutor() as executor:
+        for i in tqdm(range(0, X.shape[0], batch_size), desc='Guardando matrices en lotes'):
+            batch_indices = range(i, min(i + batch_size, X.shape[0]))
+            res = list(executor.map(feature.preprocess_img, X[batch_indices]))
+            batch_matrices = {str(idx): img_f for idx, img_f in zip(batch_indices, res)}
 
-        try:
-            with np.load(filename) as data:
-                # Cargar datos existentes
-                matrices = {f'{key}': value for key, value in data.items()}
-        except FileNotFoundError:
-            matrices = {}  # Si el archivo no existe, iniciar con un diccionario vacío
+            try:
+                with np.load(filename) as data:
+                    # Cargar datos existentes
+                    matrices = {f'{key}': value for key, value in data.items()}
+            except FileNotFoundError:
+                matrices = {}  # Si el archivo no existe, iniciar con un diccionario vacío
 
-        # Agregar las nuevas matrices con índices incrementales
-        matrices.update(batch_matrices)
+            # Agregar las nuevas matrices con índices incrementales
+            matrices.update(batch_matrices)
 
-        # Guardar todas las matrices en el archivo
-        np.savez(filename, **matrices)
+            # Guardar todas las matrices en el archivo
+            np.savez(filename, **matrices)
 
-    return
 
 # Guarda los resultados de los experimentos
 def save_result(cls: clf.Classifier , fea: feat.Features, model, X_test, y_test, report_test, ti):
@@ -129,12 +131,12 @@ def testing(pro_train: int, prop_test: int, test_size_positive = 0.1):
     hog = feat.HOGPrepocess()
     haar = feat.HAARPreprocess()
 
-    save_imgs_matrix(X_train, reshape, 'train')
+    save_imgs_matrix(X_train, reshape, 'train', batch_size = 20000)
+    save_imgs_matrix(X_test, reshape, 'test', batch_size = 20000)
     save_imgs_matrix(X_train, hog, 'train')
+    save_imgs_matrix(X_test, hog, 'test')
     save_imgs_matrix(X_train, haar, 'train')
-    save_imgs_matrix(X_train, reshape, 'test')
-    save_imgs_matrix(X_train, hog, 'test')
-    save_imgs_matrix(X_train, haar, 'test')
+    save_imgs_matrix(X_test, haar, 'test')
 
     # knn_classifier = clf.KNNClassifier()
     # dtree_classifier = clf.DTreeClassifier()
