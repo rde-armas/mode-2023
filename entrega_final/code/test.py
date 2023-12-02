@@ -28,11 +28,13 @@ def test_classifier(classifier: clf.Classifier, fea: feat.Features, X_train, X_t
 
 
 # Guarda las imagenes despues de sacar las features 
-def save_imgs_matrix(X_train: np.array, X_test: np.array, feature):
-    filename = f'./data/{feature.__class__.__name__}.npz'
+def save_imgs_matrix(X: np.array, feature, des: str, batch_size: int = 100):
+    filename = f'./data/{feature.__class__.__name__}_{des}.npz'
+    matrices = {}
 
-    for i in tqdm(range(X_train.shape[0]), desc='Guardando matrices'):
-        img_f = feature.preprocess_img(X_train[i])
+    for i in tqdm(range(0, X.shape[0], batch_size), desc='Guardando matrices en lotes'):
+        batch_indices = range(i, min(i + batch_size, X.shape[0]))
+        batch_matrices = {str(idx): feature.preprocess_img(X[idx]) for idx in batch_indices}
 
         try:
             with np.load(filename) as data:
@@ -41,12 +43,15 @@ def save_imgs_matrix(X_train: np.array, X_test: np.array, feature):
         except FileNotFoundError:
             matrices = {}  # Si el archivo no existe, iniciar con un diccionario vacío
 
-        # Agregar la nueva matriz con el índice incremental
-        matrices[str(i)] = img_f
+        # Agregar las nuevas matrices con índices incrementales
+        matrices.update(batch_matrices)
 
         # Guardar todas las matrices en el archivo
         np.savez(filename, **matrices)
 
+    return
+
+# Guarda los resultados de los experimentos
 def save_result(cls: clf.Classifier , fea: feat.Features, model, X_test, y_test, report_test, ti):
     headers = ["Classifier", "Preprocessing", "Accuracy", "Precision", "Recall/TPR", "FPR", "F1-Score", "ROC curve (area)", "Balanced Accuracy", "Time Train"]
     
@@ -124,9 +129,12 @@ def testing(pro_train: int, prop_test: int, test_size_positive = 0.1):
     hog = feat.HOGPrepocess()
     haar = feat.HAARPreprocess()
 
-    save_imgs_matrix(X_train, X_test, reshape)
-    save_imgs_matrix(X_train, X_test, hog)
-    save_imgs_matrix(X_train, X_test, haar)
+    save_imgs_matrix(X_train, reshape, 'train')
+    save_imgs_matrix(X_train, hog, 'train')
+    save_imgs_matrix(X_train, haar, 'train')
+    save_imgs_matrix(X_train, reshape, 'test')
+    save_imgs_matrix(X_train, hog, 'test')
+    save_imgs_matrix(X_train, haar, 'test')
 
     # knn_classifier = clf.KNNClassifier()
     # dtree_classifier = clf.DTreeClassifier()
