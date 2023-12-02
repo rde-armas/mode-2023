@@ -53,7 +53,7 @@ class HAARPreprocess(Features):
                              feature_coord=feature_coord)
     
     def preprocess_img(self, img: np.ndarray):
-        feature_types = ['type-2-x', 'type-2-y']#,'type-3-x', 'type-3-y', 'type-4']
+        feature_types = ['type-2-x', 'type-2-y','type-3-x', 'type-3-y', 'type-4']
         return self.extract_feature_image(img, feature_types)
 
     def preprocess_imgs(self, images: np.ndarray):
