@@ -32,9 +32,10 @@ class LogisticRegressionClassifier(Classifier):
         solver = self.mp[1][1]
         max_iter = self.mp[2][1]
         multi_class = self.mp[3][1]
+        l1_ratio = self.mp[4][1]
         self.classifier = LogisticRegression(
             penalty=penalty, solver=solver, max_iter=max_iter, 
-            multi_class=multi_class, random_state=42
+            multi_class=multi_class,l1_ratio=l1_ratio, random_state=42
             )
     
     def classify(self, images: list[np.ndarray]) -> list[int]:
