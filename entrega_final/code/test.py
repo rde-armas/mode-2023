@@ -14,6 +14,11 @@ import time
 import joblib
 from tqdm.auto import tqdm
 
+# import warnings
+
+# # Ignorar todas las advertencias (puede no ser recomendable en todos los casos)
+# warnings.filterwarnings("ignore")
+
 
 def get_classifiers(parameters_dict: dict, Classifier):
     if len(parameters_dict) == 0:
@@ -24,10 +29,9 @@ def get_classifiers(parameters_dict: dict, Classifier):
 
 def test_single_classifier(classifier: clf.Classifier, fea: feat.Features, X_train, X_test, y_train, y_test):
      # va a faltar agregar el nombre de los parametros de los modelos
-
     train_st = time.time()
     classifier.train(X_train, y_train)
-    joblib.dump(classifier, f'./model/{classifier.__class__.__name__}{fea.__class__.__name__}.pkl')
+    joblib.dump(classifier, f'./model/{classifier.__class__.__name__}{classifier.get_metaparameters()}{fea.__class__.__name__}.pkl')
     train_et = time.time()
     y_pred = classifier.classify(X_test)
     report_test = classification_report(y_test, y_pred, output_dict=True)
@@ -47,8 +51,9 @@ def save_result(cls: clf.Classifier , fea: feat.Features, X_test, y_test, report
     roc_auc = auc(fpr, tpr)
    
     # Crear un diccionario con los datos
+    name = cls.__class__.__name__ + cls.get_metaparameters()
     data = {
-        "Classifier": [cls.__class__.__name__],
+        "Classifier": [name],
         "Preprocessing": [fea.__class__.__name__],
         "Accuracy": [report_test['accuracy']],
         "Precision": [report_test['1']['precision']],
@@ -61,7 +66,6 @@ def save_result(cls: clf.Classifier , fea: feat.Features, X_test, y_test, report
         "Balanced Accuracy": [balanced_accuracy_score(y_test,y_pred)],
         "Time Train": [ti]
     }
-
     
     df = pd.DataFrame(columns=headers, data=data)
 
@@ -108,17 +112,22 @@ def test_classifiers(pro_train: int, prop_test: int, test_size_positive = 0.1):
     _, X_test, _, y_test = train_test_split(samples_test, labels_test, test_size = 0.999)
     
     knn_parameters = {'n_neighbors':[5, 3, 7, 10], 'weights':['uniform', 'distance'], 'p':[1, 2]}
-    dtree_parameters = {}
-    logistic_parameters = {}
-    rf_parameters = {}
+    dtree_parameters = {'criterion':['gini', 'entropy', 'log_loss'], 'max_depth': [3, 5, 7], 'min_samples_split': [2, 3, 5], 'min_samples_leaf': [1, 2, 3], 'max_features': ['sqrt', 'log2']}
+    logistic_parameters = {'penalty': ['l2'], 'solver': ['lbfgs', 'liblinear', 'newton-cg', 'newton-cholesky', 'sag', 'saga'], 'max_iter': [100, 150, 200], 'multi_class': ['auto', 'ovr'] }
+    logistic_parameters_2 = {'penalty': ['l1'], 'solver': ['liblinear', 'saga'], 'max_iter': [100, 150, 200], 'multi_class': ['auto', 'ovr'] }
+    logistic_parameters_3 = {'penalty': ['elasticnet'], 'solver': ['newton-cg', 'saga'], 'max_iter': [100, 150, 200], 'multi_class': ['auto', 'ovr', 'multinomial'] }
+    rf_parameters = {'n_estimators': [100, 150, 200], 'criterion': ['gini', 'entropy', 'log_loss'], 'max_depth': [2, 5, 7], 'min_samples_split': [2, 3, 5], 'max_features': ['sqrt', 'log2', None]}
+    #rf_parameters_2 = {'n_estimators': [100, 150, 200], 'criterion': ['gini', 'entropy', 'log_loss'], 'max_depth': [2, 5, 7], 'min_samples_split': [2, 3, 5], 'max_features': ['sqrt', 'log2', None]}
 
     knn_classifiers = get_classifiers(knn_parameters, clf.KNNClassifier )
     dtree_classifiers = get_classifiers(dtree_parameters, clf.DTreeClassifier)
     logistic_classifiers = get_classifiers(logistic_parameters, clf.LogisticRegressionClassifier)
+    logistic_classifiers_2 = get_classifiers(logistic_parameters_2, clf.LogisticRegressionClassifier)
+    logistic_classifiers_3 = get_classifiers(logistic_parameters_3, clf.LogisticRegressionClassifier)
     rf_classifiers = get_classifiers(rf_parameters, clf.RFClassifier)
 
-    classifiers = knn_classifiers + dtree_classifiers + logistic_classifiers + rf_classifiers
-    features_methods = [feat.Reshape() ,feat.HOGPrepocess()]
+    classifiers =  knn_classifiers
+    features_methods = [feat.HAARPreprocess()] #, feat.HAARPreprocess()]
 
     with tqdm(total=len(features_methods), position=0, leave=False) as pbar1:
         for fea in features_methods:
@@ -130,7 +139,8 @@ def test_classifiers(pro_train: int, prop_test: int, test_size_positive = 0.1):
 
             with tqdm(total=len(classifiers), position=0, leave=False) as pbar2:
                 for cls in classifiers:
-                    pbar2.set_description(f"Testing: {cls.__class__.__name__}")
+                    #print(vars(cls))
+                    pbar2.set_description(f"Classifying: {cls.__class__.__name__}")
                     y_test, y_pred, report_test, ti = test_single_classifier(cls, fea, X_train_prep, X_test_prep, y_train, y_test)
                     pbar2.set_postfix({'state': 'Save results'}, refresh=True)
                     save_result(cls, fea, X_test_prep, y_test, report_test, ti )

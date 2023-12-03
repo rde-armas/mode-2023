@@ -20,10 +20,22 @@ class Classifier(metaclass=abc.ABCMeta):
     def train(self, X_train, Y_train):
         pass
 
+    def get_metaparameters(self):
+        if self.mp is None or len(self.mp) == 0:
+            return ''
+        return ", ".join(map(lambda x: ": ".join(map(str, x)), self.mp))
+
 class LogisticRegressionClassifier(Classifier):
     def __init__(self, parameters="") -> None:
         super().__init__(parameters)
-        self.classifier = LogisticRegression(solver='liblinear', random_state=42)
+        penalty = self.mp[0][1]
+        solver = self.mp[1][1]
+        max_iter = self.mp[2][1]
+        multi_class = self.mp[3][1]
+        self.classifier = LogisticRegression(
+            penalty=penalty, solver=solver, max_iter=max_iter, 
+            multi_class=multi_class, random_state=42
+            )
     
     def classify(self, images: list[np.ndarray]) -> list[int]:
         return self.classifier.predict(images)
@@ -48,7 +60,15 @@ class KNNClassifier(Classifier):
 class RFClassifier(Classifier):
     def __init__(self, parameters="") -> None:
         super().__init__(parameters)
-        self.classifier = RandomForestClassifier()
+        n_estimators = self.mp[0][1]
+        criterion = self.mp[1][1]
+        max_depth = self.mp[2][1]
+        min_samples_split = self.mp[3][1]
+        max_features = self.mp[4][1]
+        self.classifier = RandomForestClassifier(
+            n_estimators=n_estimators, criterion=criterion, max_depth=max_depth, 
+            min_samples_split=min_samples_split, max_features=max_features
+            )
     
     def classify(self, images: list[np.ndarray]) -> list[int]:
         return self.classifier.predict(images)
@@ -59,7 +79,15 @@ class RFClassifier(Classifier):
 class DTreeClassifier(Classifier):
     def __init__(self, parameters="") -> None:
         super().__init__(parameters)
-        self.classifier = DecisionTreeClassifier()
+        criteion = self.mp[0][1]
+        max_depth = self.mp[1][1]
+        min_samples_split = self.mp[2][1]
+        min_samples_leaf = self.mp[3][1]
+        max_features = self.mp[4][1]
+        self.classifier = DecisionTreeClassifier(
+            criterion=criteion, max_depth=max_depth, min_samples_leaf=min_samples_leaf,
+            min_samples_split=min_samples_split, max_features=max_features
+            )
     
     def classify(self, images: list[np.ndarray]) -> list[int]:
         return self.classifier.predict(images)
