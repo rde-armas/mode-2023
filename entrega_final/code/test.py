@@ -41,7 +41,7 @@ def test_single_classifier(classifier: clf.Classifier, fea: feat.Features, X_tra
 
 # Guarda los resultados de los experimentos
 def save_result(cls: clf.Classifier , fea: feat.Features, X_test, y_test, report_test, y_pred, ti):
-    headers = ["Classifier", "Preprocessing", "Accuracy", "Precision", "Recall/TPR", "FNR", "TNR", "FNR", "F1-Score", "ROC curve (area)", "Balanced Accuracy", "Time Train"]
+    headers = ["Classifier", "Preprocessing", "Accuracy", "Precision", "Recall/TPR", "FPR", "FNR", "TNR", "F1-Score", "ROC curve (area)", "Balanced Accuracy", "Time Train"]
 
     conf_matrix = confusion_matrix(y_test, y_pred)
     tp, fp, fn, tn = conf_matrix.ravel()
@@ -58,8 +58,8 @@ def save_result(cls: clf.Classifier , fea: feat.Features, X_test, y_test, report
         "Precision": [report_test['1']['precision']],
         "Recall/TPR": [tp / (tp + fn)],
         "FPR": [fp / (tn + fp)],
-        "FNR": [tp / (tp +fn)],
-        "TNR": [tp / (tp + fn)],    
+        "FNR": [fn / (tp + fn)],
+        "TNR": [tn / (tn + fp)],    
         "F1-Score": [report_test['1']['f1-score']],
         "ROC curve (area)": [roc_auc],
         "Balanced Accuracy": [balanced_accuracy_score(y_test,y_pred)],
