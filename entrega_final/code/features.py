@@ -41,29 +41,29 @@ class HOGPrepocess(Features):
     def preprocess_imgs(self, images: np.ndarray):
         return super().preprocess_imgs(images)
     
-class HAARPreprocess(Features):
-    def __init__(self) -> None:
-        super().__init__()
+# class HAARPreprocess(Features):
+#     def __init__(self) -> None:
+#         super().__init__()
 
-    def extract_feature_image(self, img):
-        feature_coord, feature_type = self.roi_haar()
-        feature_coord = feature_coord[:10]
-        feature_type = feature_type[:10]
+#     def extract_feature_image(self, img):
+#         feature_coord, feature_type = self.roi_haar()
+#         feature_coord = feature_coord[:10]
+#         feature_type = feature_type[:10]
 
-        # feature_coord = np.concatenate([x[::2] for x in feature_coord])
-        # feature_type = np.concatenate([x[::2] for x in feature_type])
-        """Extract the haar feature for the current image"""
-        ii = integral_image(img)
-        return feature.haar_like_feature(ii, 0, 0, img.shape[0], img.shape[1],
-                             feature_type=feature_type,
-                             feature_coord=feature_coord)
+#         # feature_coord = np.concatenate([x[::2] for x in feature_coord])
+#         # feature_type = np.concatenate([x[::2] for x in feature_type])
+#         """Extract the haar feature for the current image"""
+#         ii = integral_image(img)
+#         return feature.haar_like_feature(ii, 0, 0, img.shape[0], img.shape[1],
+#                              feature_type=feature_type,
+#                              feature_coord=feature_coord)
     
-    def preprocess_img(self, img: np.ndarray):
-        feature_types = ['type-2-x']#, 'type-2-y']# ,'type-3-x', 'type-3-y']#, 'type-4']
-        return self.extract_feature_image(img)
+#     def preprocess_img(self, img: np.ndarray):
+#         feature_types = ['type-2-x']#, 'type-2-y']# ,'type-3-x', 'type-3-y']#, 'type-4']
+#         return self.extract_feature_image(img)
 
-    def roi_haar(self):
-        return feature.haar_like_feature_coord(62, 47, ['type-2-x'])
+#     def roi_haar(self):
+#         return feature.haar_like_feature_coord(62, 47, ['type-2-x'])
 
-    def preprocess_imgs(self, images: np.ndarray):
-        return super().preprocess_imgs(images)
+#     def preprocess_imgs(self, images: np.ndarray):
+#         return super().preprocess_imgs(images)

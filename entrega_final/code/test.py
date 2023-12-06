@@ -36,7 +36,7 @@ def test_single_classifier(classifier: clf.Classifier, fea: feat.Features, X_tra
     y_pred = classifier.classify(X_test)
     report_test = classification_report(y_test, y_pred, output_dict=True)
 
-    return y_test, y_pred, report_test, train_et - train_st
+    return y_pred, report_test, train_et - train_st
 
 
 # Guarda los resultados de los experimentos
@@ -112,19 +112,21 @@ def test_classifiers(pro_train: int, prop_test: int, test_size_positive = 0.1):
     
     knn_parameters = {'n_neighbors':[5, 3, 7, 10], 'weights':['uniform', 'distance'], 'p':[1, 2]}
     dtree_parameters = {'criterion':['gini', 'entropy', 'log_loss'], 'max_depth': [3, 5, 7], 'min_samples_split': [2, 3, 5], 'min_samples_leaf': [1, 2, 3], 'max_features': ['sqrt', 'log2']}
-    logistic_parameters = {'penalty': ['l2'], 'solver': ['newton-cg','lbfgs', 'liblinear', 'newton-cholesky', 'sag', 'saga'], 'max_iter': [100, 150, 200], 'multi_class': ['auto', 'ovr'], 'l1_ratio': [None] }
-    logistic_parameters_2 = {'penalty': ['l1'], 'solver': ['liblinear', 'saga'], 'max_iter': [100, 150, 200], 'multi_class': ['auto', 'ovr'] , 'l1_ratio': [None]}
-    logistic_parameters_3 = {'penalty': ['elasticnet'], 'solver': [ 'saga'], 'max_iter': [100, 150, 200], 'multi_class': ['auto', 'ovr', 'multinomial'], 'l1_ratio': [0.5] }
-    rf_parameters = {'n_estimators': [100, 150, 200], 'criterion': ['gini', 'entropy', 'log_loss'], 'max_depth': [2, 5, 7], 'min_samples_split': [2, 3, 5], 'max_features': ['sqrt', 'log2', None]}
-    
+    logistic_parameters = {'penalty': ['l2'], 'solver': ['newton-cg','lbfgs', 'liblinear', 'newton-cholesky', 'sag', 'saga'], 'max_iter': [50, 100, 150], 'multi_class': ['auto', 'ovr'], 'l1_ratio': [None] }
+    logistic_parameters_2 = {'penalty': ['l1'], 'solver': ['liblinear', 'saga'], 'max_iter': [50, 100, 150], 'multi_class': ['auto', 'ovr'] , 'l1_ratio': [None]}
+    logistic_parameters_3 = {'penalty': ['elasticnet'], 'solver': [ 'saga'], 'max_iter': [50, 100, 150], 'multi_class': ['auto', 'ovr', 'multinomial'], 'l1_ratio': [0.5] }
+    rf_parameters = {'n_estimators': [5, 10, 15], 'criterion': ['gini', 'entropy', 'log_loss'], 'max_depth': [2, 5, 7], 'min_samples_split': [2, 3, 5], 'max_features': ['sqrt', 'log2', None]}
+    boosting_parameters = {'n_estimators': [10, 50, 100],'loss': ['log_loss', 'exponential'], 'max_depth': [1, 2, 5], 'min_samples_split': [2, 3, 5], 'max_features': ['sqrt', 'log2']}
+
     knn_classifiers = get_classifiers(knn_parameters, clf.KNNClassifier )
     dtree_classifiers = get_classifiers(dtree_parameters, clf.DTreeClassifier)
     logistic_classifiers = get_classifiers(logistic_parameters, clf.LogisticRegressionClassifier)
     logistic_classifiers_2 = get_classifiers(logistic_parameters_2, clf.LogisticRegressionClassifier)
     logistic_classifiers_3 = get_classifiers(logistic_parameters_3, clf.LogisticRegressionClassifier)
     rf_classifiers = get_classifiers(rf_parameters, clf.RFClassifier)
+    boosting_classifiers = get_classifiers(boosting_parameters, clf.GBoostingClassifier)
 
-    classifiers = dtree_classifiers + logistic_classifiers + logistic_classifiers_2 + logistic_classifiers_3 + rf_classifiers + knn_classifiers 
+    classifiers = dtree_classifiers + logistic_classifiers + logistic_classifiers_2 + logistic_classifiers_3 + rf_classifiers + knn_classifiers + boosting_classifiers
     features_methods = [feat.Reshape(), feat.HOGPrepocess()] #, feat.HAARPreprocess()]
 
     with tqdm(total=len(features_methods), position=0, leave=False) as pbar1:
@@ -138,8 +140,8 @@ def test_classifiers(pro_train: int, prop_test: int, test_size_positive = 0.1):
             with tqdm(total=len(classifiers), position=0, leave=False) as pbar2:
                 for cls in classifiers:
                     pbar2.set_description(f"Classifying: {cls.__class__.__name__}")
-                    t1 = time.time()
-                    y_test, y_pred, report_test, ti = test_single_classifier(cls, fea, X_train_prep, X_test_prep, y_train, y_test)
+                    pbar2.set_postfix({'state': 'Testing'}, refresh=True)
+                    y_pred, report_test, ti = test_single_classifier(cls, fea, X_train_prep, X_test_prep, y_train, y_test)
                     pbar2.set_postfix({'state': 'Save results'}, refresh=True)
                     save_result(cls, fea, X_test_prep, y_test, report_test, y_pred, ti )
                     pbar2.update()
