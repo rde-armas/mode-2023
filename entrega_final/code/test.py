@@ -1,4 +1,4 @@
-import clasifiers as clf
+import classifiers as clf
 import features as feat
 import carga as carga
 import numpy as np
@@ -32,7 +32,7 @@ def test_single_classifier(classifier: clf.Classifier, fea: feat.Features, X_tra
     train_st = time.time()
     classifier.train(X_train, y_train)
     train_et = time.time()
-    joblib.dump(classifier, f'./model/{classifier.__class__.__name__}: {classifier.get_metaparameters()}{fea.__class__.__name__}.pkl')
+    #joblib.dump(classifier, f'./model/{classifier.__class__.__name__}: {classifier.get_metaparameters()}{fea.__class__.__name__}.joblib')
     y_pred = classifier.classify(X_test)
     report_test = classification_report(y_test, y_pred, output_dict=True)
 

@@ -1,5 +1,6 @@
 
 from skimage.transform import resize
+import numpy as np
 
 # Define una función para realizar una ventana deslizante (sliding window) sobre una imagen.
 def sliding_window(img, 
@@ -26,3 +27,52 @@ def sliding_window(img,
             # Usa yield para devolver las coordenadas actuales y el parche. 
             # Esto convierte la función en un generador.
             yield (i, j), patch
+
+
+def non_max_suppression(indices, Ni, Nj, overlapThresh):
+    # Si no hay rectángulos, regresar una lista vacía
+    if len(indices) == 0:
+        return []
+
+    # Si las cajas son enteros, convertir a flotantes
+    if indices.dtype.kind == "i":
+        indices = indices.astype("float")
+
+    # Inicializar la lista de índices seleccionados
+    pick = []
+
+    # Tomar las coordenadas de los cuadros
+    x1 = np.array([indices[i,0] for i in range(indices.shape[0])])
+    y1 = np.array([indices[i,1] for i in range(indices.shape[0])])
+    x2 = np.array([indices[i,0]+Ni for i in range(indices.shape[0])])
+    y2 = np.array([indices[i,1]+Nj for i in range(indices.shape[0])])
+
+    # Calcula el área de los cuadros y ordena los cuadros
+    area = (x2 - x1 + 1) * (y2 - y1 + 1)
+    idxs = np.argsort(y2)
+
+    # Mientras todavía hay índices en la lista de índices
+    while len(idxs) > 0:
+        # Toma el último índice de la lista y agrega el índice a la lista de seleccionados
+        last = len(idxs) - 1
+        i = idxs[last]
+        pick.append(i)
+
+        # Encontrar las coordenadas (x, y) más grandes para el inicio de la caja y las coordenadas (x, y) más pequeñas para el final de la caja
+        xx1 = np.maximum(x1[i], x1[idxs[:last]])
+        yy1 = np.maximum(y1[i], y1[idxs[:last]])
+        xx2 = np.minimum(x2[i], x2[idxs[:last]])
+        yy2 = np.minimum(y2[i], y2[idxs[:last]])
+
+        # Calcula el ancho y alto de la caja
+        w = np.maximum(0, xx2 - xx1 + 1)
+        h = np.maximum(0, yy2 - yy1 + 1)
+
+        # Calcula la proporción de superposición
+        overlap = (w * h) / area[idxs[:last]]
+
+        # Elimina todos los índices del índice de lista que tienen una proporción de superposición mayor que el umbral proporcionado
+        idxs = np.delete(idxs, np.concatenate(([last], np.where(overlap > overlapThresh)[0])))
+
+    # Devuelve solo las cajas seleccionadas
+    return indices[pick].astype("int")
