@@ -1,6 +1,8 @@
 
 from skimage.transform import resize
 import numpy as np
+from tqdm import tqdm
+from skimage import feature
 
 # Define una función para realizar una ventana deslizante (sliding window) sobre una imagen.
 def sliding_window(img, 
@@ -76,3 +78,34 @@ def non_max_suppression(indices, Ni, Nj, overlapThresh):
 
     # Devuelve solo las cajas seleccionadas
     return indices[pick].astype("int")
+
+# Función que devuelve el número de detecciones brutas y procesadas para diversas escalas
+# Esta función asume conocidos model, size y los parámetros de las HOG
+def detections_by_scale(model, test_image, test_scales, step, positive_shape, thresholds=[0.5]):
+    raw_detections = []
+    detections = []
+        
+    for scale in tqdm(test_scales):
+        raw_detections_scale = []
+        detections_scale = []
+
+        # Ventana deslizante
+        indices, patches = zip(*sliding_window(test_image, patch_size=positive_shape,scale=scale, istep=step, jstep=step))
+
+        # Calcula las características HOG para cada parche y las almacena en un array.
+        patches_hog = np.array([feature.hog(patch) for patch in patches])
+        # Predicción
+        for thr in thresholds:
+            labels = (model.predict_proba(patches_hog)[:,1]>=thr).astype(int)
+            raw_detections_scale.append(labels.sum())
+            Ni, Nj = positive_shape
+            indices = np.array(indices)
+            detecciones = indices[labels == 1]
+            detecciones = non_max_suppression(np.array(detecciones),Ni,Nj, 0.3)
+            detections_scale.append(len(detecciones))
+        
+        # Actualizamos las listas
+        raw_detections.append(raw_detections_scale)
+        detections.append(detections_scale)
+        
+    return np.array(raw_detections), np.array(detections)
