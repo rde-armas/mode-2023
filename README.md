@@ -1,9 +1,7 @@
 
-::: {.cell .markdown id="n63en9DiIsCL"}
-# 1. Procesamiento y etiquetado de fondos {#1-procesamiento-y-etiquetado-de-fondos}
-:::
 
-::: {.cell .markdown id="qTU4tQSnIsCM"}
+# 1. Procesamiento y etiquetado de fondos {#1-procesamiento-y-etiquetado-de-fondos}
+
 Vamos a trabajar con imagenes en escala de grises, cada una con
 dimensiones de 62 x 47 pıxeles. Para asegurar coherencia, procesaremos
 las fotografıas de fondo para que compartan estas propiedades.
@@ -11,17 +9,13 @@ las fotografıas de fondo para que compartan estas propiedades.
 En total, contamos con 13.233 imagenes de rostros, de las cuales
 utilizaremos un 90 % para el entrenamiento, dejandonos aproximadamente
 11.909 imagenes de rostros para dicho proposito
-:::
 
-::: {.cell .markdown id="GZ86mw5zIsCP"}
 Con el objetivo de hacer que nuestro conjunto de datos refleje de manera
 mas precisa la realidad, donde se requerir a detectar rostros en
 imagenes donde la mayorıa de los parches seran fondos,hemos decidido que
 por cada rostro en el conjunto de entrenamiento existan 5 fondos,
 mientras que en el conjunto de prueba este numero se incrementa a 100.
-:::
 
-::: {.cell .code execution_count="37" colab="{\"base_uri\":\"https://localhost:8080/\",\"height\":400}" id="mImM5XDSIsCN" outputId="79162b9e-c94c-4c17-a427-206017ac0e1b"}
 ``` python
 import code.carga  as carga
 
@@ -31,25 +25,19 @@ print(f'muestras entrenamiento: {X_train.shape}')
 print(f'muestras validacion: {X_test.shape}')
 ```
 
-::: {.output .stream .stdout}
+
     muestras entrenamiento: (71357, 62, 47)
     muestras validacion: (133521, 62, 47)
-:::
-:::
 
-::: {.cell .markdown id="rWrcmtrSxEiL"}
+
 ## 2. Features HOG {#2-features-hog}
-:::
 
-::: {.cell .code execution_count="38" id="BZl6yRIyxJx1"}
 ``` python
 from skimage import feature, data, color
 import matplotlib.pyplot as plt
 import numpy as np
 ```
-:::
 
-::: {.cell .code execution_count="39" colab="{\"base_uri\":\"https://localhost:8080/\",\"height\":251}" id="Ag6i8kuNx8hp" outputId="56113f55-f125-432d-fb9c-5cff1adc9bdb"}
 ``` python
 muestra_ejemplo = carga.positive_patches()[58]
 hog_features, hog_vis = feature.hog(muestra_ejemplo, visualize=True)
@@ -61,21 +49,13 @@ ax[0].set_title('Imagen de entrada')
 ax[1].imshow(hog_vis, cmap='gray')
 ax[1].set_title('Visualización de las HOG features')
 ```
-
-::: {.output .execute_result execution_count="39"}
     Text(0.5, 1.0, 'Visualización de las HOG features')
-:::
 
-::: {.output .display_data}
 ![](vertopal_2ea61ea6364f4edebd5db3a0ba99f1bd/293a291514861ad3ed3b95be322b177adea83cad.png)
-:::
-:::
 
-::: {.cell .markdown id="OCxvUTjF6CG3"}
+
 ## 3. Comparacion de modelos {#3-comparacion-de-modelos}
-:::
 
-::: {.cell .markdown id="oRWXU8M70kEz"}
 Entre todos los experimentos realizados, seleccionamos los 10 modelos
 más destacados, principalmente basándonos en sus métricas de Balanced
 Accuracy y FPR (tasa de falsos positivos).
